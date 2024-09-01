@@ -136,6 +136,8 @@ pub struct StandaloneOptions {
     pub region_engine: Vec<RegionEngineConfig>,
     pub export_metrics: ExportMetricsOption,
     pub tracing: TracingOptions,
+    pub init_regions_in_background: bool,
+    pub init_regions_parallelism: usize,
 }
 
 impl Default for StandaloneOptions {
@@ -163,6 +165,8 @@ impl Default for StandaloneOptions {
                 RegionEngineConfig::File(FileEngineConfig::default()),
             ],
             tracing: TracingOptions::default(),
+            init_regions_in_background: false,
+            init_regions_parallelism: 16,
         }
     }
 }
@@ -204,6 +208,9 @@ impl StandaloneOptions {
             storage: cloned_opts.storage,
             region_engine: cloned_opts.region_engine,
             rpc_addr: cloned_opts.grpc.addr,
+            init_regions_in_background: cloned_opts.init_regions_in_background,
+            init_regions_parallelism: cloned_opts.init_regions_parallelism,
+            mode: Mode::Standalone,
             ..Default::default()
         }
     }
