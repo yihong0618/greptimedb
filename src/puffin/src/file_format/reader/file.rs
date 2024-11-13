@@ -16,6 +16,7 @@ use std::io::{self, SeekFrom};
 
 use async_trait::async_trait;
 use common_base::range_read::RangeReader;
+use common_telemetry::tracing;
 use snafu::{ensure, ResultExt};
 
 use crate::blob_metadata::BlobMetadata;
@@ -115,6 +116,7 @@ impl<'a, R: io::Read + io::Seek + 'a> SyncReader<'a> for PuffinFileReader<R> {
 impl<'a, R: RangeReader + 'a> AsyncReader<'a> for PuffinFileReader<R> {
     type Reader = PartialReader<&'a mut R>;
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn metadata(&'a mut self) -> Result<FileMetadata> {
         if let Some(metadata) = &self.metadata {
             return Ok(metadata.clone());

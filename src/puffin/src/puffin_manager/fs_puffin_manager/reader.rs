@@ -19,6 +19,7 @@ use async_compression::futures::bufread::ZstdDecoder;
 use async_trait::async_trait;
 use bytes::{BufMut, Bytes};
 use common_base::range_read::{AsyncReadAdapter, Metadata, RangeReader};
+use common_telemetry::tracing;
 use futures::io::BufReader;
 use futures::{AsyncRead, AsyncWrite};
 use snafu::{ensure, OptionExt, ResultExt};
@@ -66,6 +67,7 @@ where
     type Blob = Either<RandomReadBlob<F>, S::Blob>;
     type Dir = S::Dir;
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn blob(&self, key: &str) -> Result<Self::Blob> {
         let reader = self
             .puffin_file_accessor
@@ -133,6 +135,7 @@ where
     S: Stager,
     F: PuffinFileAccessor + Clone,
 {
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn init_blob_to_stager(
         reader: PuffinFileReader<F::Reader>,
         blob_metadata: BlobMetadata,
@@ -210,6 +213,7 @@ where
 
     /// Handles the decompression of the reader and writes the decompressed data to the writer.
     /// Returns the number of bytes written.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn handle_decompress(
         reader: impl AsyncRead,
         mut writer: impl AsyncWrite + Unpin,

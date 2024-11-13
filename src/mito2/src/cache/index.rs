@@ -17,6 +17,7 @@ use std::sync::Arc;
 use api::v1::index::InvertedIndexMetas;
 use async_trait::async_trait;
 use common_base::BitVec;
+use common_telemetry::{debug, tracing};
 use index::inverted_index::error::DecodeFstSnafu;
 use index::inverted_index::format::reader::InvertedIndexReader;
 use index::inverted_index::FstMap;
@@ -68,6 +69,7 @@ where
         } else {
             let mut all_data = Vec::with_capacity(1024 * 1024);
             self.inner.read_all(&mut all_data).await?;
+            debug!("All data size: {}, range: {:?}", all_data.len(), range);
             let result = all_data[range].to_vec();
             self.cache.put_index(
                 IndexKey {
@@ -83,6 +85,7 @@ where
 
 #[async_trait]
 impl<R: InvertedIndexReader> InvertedIndexReader for CachedInvertedIndexBlobReader<R> {
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn read_all(
         &mut self,
         dest: &mut Vec<u8>,
@@ -90,6 +93,7 @@ impl<R: InvertedIndexReader> InvertedIndexReader for CachedInvertedIndexBlobRead
         self.inner.read_all(dest).await
     }
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn seek_read(
         &mut self,
         offset: u64,
@@ -98,6 +102,7 @@ impl<R: InvertedIndexReader> InvertedIndexReader for CachedInvertedIndexBlobRead
         self.inner.seek_read(offset, size).await
     }
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn metadata(&mut self) -> index::inverted_index::error::Result<Arc<InvertedIndexMetas>> {
         if let Some(cached) = self.cache.get_index_metadata(self.file_id) {
             CACHE_HIT.with_label_values(&[INDEX_METADATA_TYPE]).inc();
@@ -110,6 +115,7 @@ impl<R: InvertedIndexReader> InvertedIndexReader for CachedInvertedIndexBlobRead
         }
     }
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn fst(
         &mut self,
         offset: u64,

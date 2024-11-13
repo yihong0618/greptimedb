@@ -16,6 +16,7 @@ use std::mem::size_of;
 
 use async_trait::async_trait;
 use common_base::BitVec;
+use common_telemetry::tracing;
 use greptime_proto::v1::index::InvertedIndexMetas;
 
 use crate::inverted_index::error::{IndexNotFoundSnafu, Result};
@@ -43,6 +44,7 @@ pub struct PredicatesIndexApplier {
 impl IndexApplier for PredicatesIndexApplier {
     /// Applies all `FstApplier`s to the data in the inverted index reader, intersecting the individual
     /// bitmaps obtained for each index to result in a final set of indices.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn apply<'a>(
         &self,
         context: SearchContext,

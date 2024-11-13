@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use common_base::BitVec;
+use common_telemetry::tracing;
 use greptime_proto::v1::index::InvertedIndexMeta;
 
 use crate::inverted_index::error::Result;
@@ -41,6 +42,7 @@ impl<'a> FstValuesMapper<'a> {
     }
 
     /// Maps an array of FST values to a `BitVec` by retrieving and combining bitmaps.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     pub async fn map_values(&mut self, values: &[u64]) -> Result<BitVec> {
         let mut bitmap = BitVec::new();
 

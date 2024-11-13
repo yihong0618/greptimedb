@@ -16,7 +16,7 @@ pub mod builder;
 
 use std::sync::Arc;
 
-use common_telemetry::warn;
+use common_telemetry::{debug, tracing, warn};
 use index::inverted_index::format::reader::InvertedIndexBlobReader;
 use index::inverted_index::search::index_apply::{
     ApplyOutput, IndexApplier, IndexNotFoundStrategy, SearchContext,
@@ -89,6 +89,7 @@ impl InvertedIndexApplier {
     }
 
     /// Applies predicates to the provided SST file id and returns the relevant row group ids
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     pub async fn apply(&self, file_id: FileId) -> Result<ApplyOutput> {
         let _timer = INDEX_APPLY_ELAPSED
             .with_label_values(&[TYPE_INVERTED_INDEX])
@@ -110,6 +111,10 @@ impl InvertedIndexApplier {
         };
 
         if let Some(index_cache) = &self.inverted_index_cache {
+            debug!(
+                "Using cached inverted index blob reader, file_id: {}",
+                file_id
+            );
             let mut index_reader = CachedInvertedIndexBlobReader::new(
                 file_id,
                 InvertedIndexBlobReader::new(blob),
@@ -156,6 +161,7 @@ impl InvertedIndexApplier {
     }
 
     /// Creates a blob reader from the remote index file.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn remote_blob_reader(&self, file_id: FileId) -> Result<BlobReader> {
         let puffin_manager = self.puffin_manager_factory.build(self.store.clone());
         let file_path = location::index_file_path(&self.region_dir, file_id);

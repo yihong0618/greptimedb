@@ -17,6 +17,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use common_error::ext::BoxedError;
+use common_telemetry::tracing;
 use object_store::{FuturesAsyncWriter, ObjectStore};
 use puffin::error::{self as puffin_error, Result as PuffinResult};
 use puffin::puffin_manager::file_accessor::PuffinFileAccessor;
@@ -118,6 +119,7 @@ impl PuffinFileAccessor for ObjectStorePuffinFileAccessor {
     type Reader = InstrumentedRangeReader;
     type Writer = InstrumentedAsyncWrite;
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn reader(&self, puffin_file_name: &str) -> PuffinResult<Self::Reader> {
         self.object_store
             .range_reader(

@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use common_base::BitVec;
+use common_telemetry::tracing;
 use greptime_proto::v1::index::InvertedIndexMetas;
 use snafu::ResultExt;
 
@@ -40,12 +41,14 @@ pub trait InvertedIndexReader: Send {
     async fn metadata(&mut self) -> Result<Arc<InvertedIndexMetas>>;
 
     /// Retrieves the finite state transducer (FST) map from the given offset and size.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn fst(&mut self, offset: u64, size: u32) -> Result<FstMap> {
         let fst_data = self.seek_read(offset, size).await?;
         FstMap::new(fst_data).context(DecodeFstSnafu)
     }
 
     /// Retrieves the bitmap from the given offset and size.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn bitmap(&mut self, offset: u64, size: u32) -> Result<BitVec> {
         self.seek_read(offset, size).await.map(BitVec::from_vec)
     }

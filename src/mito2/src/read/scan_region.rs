@@ -658,6 +658,7 @@ impl ScanInput {
         reader_metrics: &mut ReaderMetrics,
     ) -> Result<FileRangeBuilder> {
         let file = &self.files[file_index];
+        debug!("Pruning file: {:?}", file);
         let res = self
             .access_layer
             .read_sst(file.clone())

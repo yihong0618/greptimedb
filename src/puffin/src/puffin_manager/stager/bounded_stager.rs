@@ -23,7 +23,7 @@ use base64::prelude::BASE64_URL_SAFE;
 use base64::Engine;
 use common_base::range_read::FileReader;
 use common_runtime::runtime::RuntimeTrait;
-use common_telemetry::{info, warn};
+use common_telemetry::{info, tracing, warn};
 use futures::{FutureExt, StreamExt};
 use moka::future::Cache;
 use sha2::{Digest, Sha256};
@@ -111,6 +111,7 @@ impl Stager for BoundedStager {
     type Blob = Arc<FsBlobGuard>;
     type Dir = Arc<FsDirGuard>;
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn get_blob<'a>(
         &self,
         puffin_file_name: &str,
@@ -224,6 +225,7 @@ impl BoundedStager {
         BASE64_URL_SAFE.encode(hash)
     }
 
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn write_blob(
         target_path: &PathBuf,
         init_fn: Box<dyn InitBlobFn + Send + Sync + '_>,
