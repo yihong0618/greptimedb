@@ -73,6 +73,12 @@ lazy_static! {
     /// Histogram of flushed bytes.
     pub static ref FLUSH_BYTES_TOTAL: IntCounter =
         register_int_counter!("greptime_mito_flush_bytes_total", "mito flush bytes total").unwrap();
+    /// Histogram of read bytes.
+    pub static ref READ_BYTES_TOTAL: IntCounter = register_int_counter!(
+        "greptime_mito_read_bytes_total",
+        "mito read bytes total",
+    )
+    .unwrap();
     // ------ End of flush related metrics
 
 

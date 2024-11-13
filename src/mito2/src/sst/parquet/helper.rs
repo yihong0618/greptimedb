@@ -25,6 +25,7 @@ use snafu::ResultExt;
 
 use crate::error;
 use crate::error::Result;
+use crate::metrics::READ_BYTES_TOTAL;
 
 // Refer to https://github.com/apache/arrow-rs/blob/7e134f4d277c0b62c27529fc15a4739de3ad0afd/parquet/src/file/footer.rs#L74-L90
 /// Convert [format::FileMetaData] to [ParquetMetaData]
@@ -100,7 +101,8 @@ pub async fn fetch_byte_ranges(
     object_store: ObjectStore,
     ranges: &[Range<u64>],
 ) -> object_store::Result<Vec<Bytes>> {
-    Ok(object_store
+    let mut total = 0;
+    let bytes = object_store
         .reader_with(file_path)
         .concurrent(FETCH_PARALLELISM)
         .gap(MERGE_GAP)
@@ -108,6 +110,11 @@ pub async fn fetch_byte_ranges(
         .fetch(ranges.to_vec())
         .await?
         .into_iter()
-        .map(|buf| buf.to_bytes())
-        .collect::<Vec<_>>())
+        .map(|buf| {
+            total += buf.len();
+            buf.to_bytes()
+        })
+        .collect::<Vec<_>>();
+    READ_BYTES_TOTAL.inc_by(total as u64);
+    Ok(bytes)
 }
