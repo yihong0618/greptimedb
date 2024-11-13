@@ -18,6 +18,7 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use bytes::{Buf, Bytes};
+use common_telemetry::tracing;
 use object_store::ObjectStore;
 use parquet::arrow::arrow_reader::{RowGroups, RowSelection};
 use parquet::arrow::ProjectionMask;
@@ -97,6 +98,7 @@ impl<'a> InMemoryRowGroup<'a> {
     }
 
     /// Fetches the necessary column data into memory
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     pub async fn fetch(
         &mut self,
         projection: &ProjectionMask,

@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use async_stream::try_stream;
-use common_telemetry::debug;
+use common_telemetry::{debug, tracing};
 use futures::Stream;
 use store_api::storage::RegionId;
 
@@ -148,6 +148,7 @@ pub(crate) fn scan_mem_ranges(
 }
 
 /// Scans file ranges at `index`.
+#[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
 pub(crate) fn scan_file_ranges(
     stream_ctx: Arc<StreamContext>,
     part_metrics: PartitionMetrics,

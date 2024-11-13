@@ -651,6 +651,7 @@ impl ScanInput {
     }
 
     /// Prunes a file to scan and returns the builder to build readers.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn prune_file(
         &self,
         file_index: usize,
@@ -809,6 +810,7 @@ impl StreamContext {
     }
 
     /// Creates file ranges to scan.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     pub(crate) async fn build_file_ranges(
         &self,
         index: RowGroupIndex,
@@ -883,6 +885,7 @@ impl RangeBuilderList {
     }
 
     /// Builds file ranges to read the row group at `index`.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn build_file_ranges(
         &self,
         input: &ScanInput,
