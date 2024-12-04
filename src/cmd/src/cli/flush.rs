@@ -205,13 +205,11 @@ impl Tool for Flush {
                                         tables_total
                                     );
                                     moved_database_client
-                                        .sql_with_catalog(
+                                        .sql_in_public(
                                             &format!(
                                                 "admin flush_region({});",
                                                 RegionId::new(table_id, region_number).as_u64()
                                             ),
-                                            &moved_catalog,
-                                            &moved_schema,
                                         )
                                         .await
                                         .map(|_| ())
