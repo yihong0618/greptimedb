@@ -37,6 +37,13 @@ pub enum Error {
         source: common_meta::error::Error,
     },
 
+    #[snafu(display("Failed to fetch metadata"))]
+    FetchMetadata {
+        #[snafu(implicit)]
+        location: Location,
+        source: common_meta::error::Error,
+    },
+
     #[snafu(display("Failed to init DDL manager"))]
     InitDdlManager {
         #[snafu(implicit)]
@@ -368,9 +375,9 @@ impl ErrorExt for Error {
             Error::BuildMetaServer { source, .. } => source.status_code(),
             Error::BuildKvBackend { source, .. } => source.status_code(),
             Error::UnsupportedSelectorType { source, .. } => source.status_code(),
-            Error::DecodeValue { source, .. } | Error::MetadataProcessor { source, .. } => {
-                source.status_code()
-            }
+            Error::DecodeValue { source, .. }
+            | Error::MetadataProcessor { source, .. }
+            | Error::FetchMetadata { source, .. } => source.status_code(),
 
             Error::InitMetadata { source, .. } | Error::InitDdlManager { source, .. } => {
                 source.status_code()

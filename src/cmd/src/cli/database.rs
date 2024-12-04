@@ -26,6 +26,7 @@ use snafu::ResultExt;
 
 use crate::error::{HttpQuerySqlSnafu, Result, SerdeJsonSnafu};
 
+#[derive(Debug, Clone)]
 pub(crate) struct DatabaseClient {
     addr: String,
     catalog: String,
@@ -59,11 +60,15 @@ impl DatabaseClient {
         self.sql(sql, DEFAULT_SCHEMA_NAME).await
     }
 
-    /// Execute sql query.
-    pub async fn sql(&self, sql: &str, schema: &str) -> Result<Option<Vec<Vec<Value>>>> {
+    pub async fn sql_with_catalog(
+        &self,
+        sql: &str,
+        catalog: &str,
+        schema: &str,
+    ) -> Result<Option<Vec<Vec<Value>>>> {
         let url = format!("http://{}/v1/sql", self.addr);
         let params = [
-            ("db", format!("{}-{}", self.catalog, schema)),
+            ("db", format!("{}-{}", catalog, schema)),
             ("sql", sql.to_string()),
         ];
         let mut request = reqwest::Client::new()
@@ -97,6 +102,11 @@ impl DatabaseClient {
             GreptimeQueryOutput::Records(records) => Some(records.rows().clone()),
             GreptimeQueryOutput::AffectedRows(_) => None,
         }))
+    }
+
+    /// Execute sql query.
+    pub async fn sql(&self, sql: &str, schema: &str) -> Result<Option<Vec<Vec<Value>>>> {
+        self.sql_with_catalog(sql, &self.catalog, schema).await
     }
 }
 

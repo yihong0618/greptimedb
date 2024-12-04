@@ -22,6 +22,7 @@ mod helper;
 
 // Wait for https://github.com/GreptimeTeam/greptimedb/issues/2373
 mod database;
+mod flush;
 mod import;
 #[allow(unused)]
 mod repl;
@@ -31,6 +32,7 @@ use async_trait::async_trait;
 use bench::BenchTableMetadataCommand;
 use clap::Parser;
 use common_telemetry::logging::{LoggingOptions, TracingOptions};
+use flush::FlushCommand;
 pub use repl::Repl;
 use tracing_appender::non_blocking::WorkerGuard;
 use wal_switch::{SwitchToLocalWalCommand, SwitchToRemoteWalCommand};
@@ -122,6 +124,8 @@ enum SubCommand {
     Import(ImportCommand),
     SwitchToRemoteWal(SwitchToRemoteWalCommand),
     SwitchToLocalWal(SwitchToLocalWalCommand),
+    /// Flush all regions in cluster.
+    Flush(FlushCommand),
 }
 
 impl SubCommand {
@@ -133,6 +137,7 @@ impl SubCommand {
             SubCommand::Import(cmd) => cmd.build(guard).await,
             SubCommand::SwitchToRemoteWal(cmd) => cmd.build(guard).await,
             SubCommand::SwitchToLocalWal(cmd) => cmd.build(guard).await,
+            SubCommand::Flush(cmd) => cmd.build(guard).await,
         }
     }
 }
