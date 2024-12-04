@@ -25,9 +25,9 @@ use common_meta::key::TableMetadataManager;
 use common_meta::kv_backend::chroot::ChrootKvBackend;
 use common_meta::kv_backend::etcd::EtcdStore;
 use common_meta::kv_backend::KvBackendRef;
-use common_telemetry::info;
+use common_telemetry::{error, info};
 use etcd_client::Client;
-use futures::future::try_join_all;
+use futures::future::join_all;
 use futures::TryStreamExt;
 use meta_srv::error::ConnectEtcdSnafu;
 use meta_srv::Result as MetaResult;
@@ -215,6 +215,9 @@ impl Tool for Flush {
                                         )
                                         .await
                                         .map(|_| ())
+                                        .inspect_err(
+                                            |err| error!(err; "Failed to flush table: {}({})", format_full_table_name(&moved_catalog, &moved_schema, &moved_table_name), table_id),
+                                        )
                                 });
                             }
                         } else {
@@ -236,7 +239,10 @@ impl Tool for Flush {
             }
         }
 
-        let _ = try_join_all(tasks).await?;
+        let _ = join_all(tasks)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(())
     }
