@@ -180,7 +180,11 @@ impl InvertedIndexApplier {
     }
 
     /// Creates a blob reader from the remote index file.
-    async fn remote_blob_reader(&self, file_id: FileId) -> Result<BlobReader> {
+    async fn remote_blob_reader(
+        &self,
+        file_id: FileId,
+        file_size_hint: Option<u64>,
+    ) -> Result<BlobReader> {
         let puffin_manager = self
             .puffin_manager_factory
             .build(self.store.clone())
