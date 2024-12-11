@@ -68,6 +68,12 @@ pub enum Error {
         location: Location,
     },
 
+    #[snafu(display("Invalid footer payload size"))]
+    InvalidFooterPayloadSize {
+        #[snafu(implicit)]
+        location: Location,
+    },
+
     #[snafu(display("Unexpected inverted index footer payload size, max: {max_payload_size}, actual: {actual_payload_size}"))]
     UnexpectedFooterPayloadSize {
         max_payload_size: u64,
@@ -220,7 +226,8 @@ impl ErrorExt for Error {
             | KeysApplierUnexpectedPredicates { .. }
             | CommonIo { .. }
             | UnknownIntermediateCodecMagic { .. }
-            | FstCompile { .. } => StatusCode::Unexpected,
+            | FstCompile { .. }
+            | InvalidFooterPayloadSize { .. } => StatusCode::Unexpected,
 
             ParseRegex { .. }
             | ParseDFA { .. }
