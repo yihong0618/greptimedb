@@ -123,7 +123,7 @@ impl InvertedIndexApplier {
             index_not_found_strategy: IndexNotFoundStrategy::ReturnEmpty,
         };
 
-        let blob = match self.cached_blob_reader(file_id).await {
+        let blob = match self.cached_blob_reader(file_id, file_size_hint).await {
             Ok(Some(puffin_reader)) => puffin_reader,
             other => {
                 if let Err(err) = other {
@@ -153,7 +153,11 @@ impl InvertedIndexApplier {
     }
 
     /// Creates a blob reader from the cached index file.
-    async fn cached_blob_reader(&self, file_id: FileId) -> Result<Option<BlobReader>> {
+    async fn cached_blob_reader(
+        &self,
+        file_id: FileId,
+        file_size_hint: Option<u64>,
+    ) -> Result<Option<BlobReader>> {
         let Some(file_cache) = &self.file_cache else {
             return Ok(None);
         };
@@ -170,6 +174,8 @@ impl InvertedIndexApplier {
             .reader(&puffin_file_name)
             .await
             .context(PuffinBuildReaderSnafu)?
+            // Skips file system stat to minimize additional I/O overhead, which can take hundreds of microseconds.
+            .with_file_size_hint(file_size_hint)
             .blob(INDEX_BLOB_TYPE)
             .await
             .context(PuffinReadBlobSnafu)?
