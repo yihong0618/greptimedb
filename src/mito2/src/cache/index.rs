@@ -18,7 +18,7 @@ use std::sync::Arc;
 use api::v1::index::InvertedIndexMetas;
 use async_trait::async_trait;
 use common_base::BitVec;
-use common_telemetry::tracing;
+use common_telemetry::{debug, tracing};
 use index::inverted_index::error::DecodeFstSnafu;
 use index::inverted_index::format::reader::InvertedIndexReader;
 use index::inverted_index::FstMap;
@@ -134,6 +134,7 @@ impl<R: InvertedIndexReader> InvertedIndexReader for CachedInvertedIndexBlobRead
         offset: u64,
         size: u32,
     ) -> index::inverted_index::error::Result<FstMap> {
+        debug!("using CachedInvertedIndexBlobReader, fst offset: {offset}, size: {size}");
         self.get_or_load(offset, size)
             .await
             .and_then(|r| FstMap::new(r).context(DecodeFstSnafu))

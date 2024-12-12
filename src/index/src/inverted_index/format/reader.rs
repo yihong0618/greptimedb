@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use common_base::BitVec;
+use common_telemetry::debug;
 use greptime_proto::v1::index::InvertedIndexMetas;
 use snafu::ResultExt;
 
@@ -38,6 +39,7 @@ pub trait InvertedIndexReader: Send {
 
     /// Retrieves the finite state transducer (FST) map from the given offset and size.
     async fn fst(&mut self, offset: u64, size: u32) -> Result<FstMap> {
+        debug!("using InvertedIndexReader, fst offset: {offset}, size: {size}");
         let fst_data = self.range_read(offset, size).await?;
         FstMap::new(fst_data).context(DecodeFstSnafu)
     }

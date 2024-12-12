@@ -16,7 +16,7 @@ pub mod builder;
 
 use std::sync::Arc;
 
-use common_telemetry::warn;
+use common_telemetry::{debug, warn};
 use index::inverted_index::format::reader::InvertedIndexBlobReader;
 use index::inverted_index::search::index_apply::{
     ApplyOutput, IndexApplier, IndexNotFoundStrategy, SearchContext,
@@ -134,6 +134,7 @@ impl InvertedIndexApplier {
         };
 
         if let Some(index_cache) = &self.inverted_index_cache {
+            debug!("inverted index cache is used");
             let mut index_reader = CachedInvertedIndexBlobReader::new(
                 file_id,
                 InvertedIndexBlobReader::new(blob),
