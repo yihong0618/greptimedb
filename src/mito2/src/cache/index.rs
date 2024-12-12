@@ -18,6 +18,8 @@ use std::sync::Arc;
 use api::v1::index::InvertedIndexMetas;
 use async_trait::async_trait;
 use common_base::BitVec;
+use common_telemetry::debug;
+use common_telemetry::tracing::{self};
 use index::inverted_index::error::DecodeFstSnafu;
 use index::inverted_index::format::reader::InvertedIndexReader;
 use index::inverted_index::FstMap;
@@ -57,6 +59,7 @@ where
 {
     /// Gets given range of index data from cache, and loads from source if the file
     /// is not already cached.
+    #[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
     async fn get_or_load(
         &mut self,
         offset: u64,
@@ -95,6 +98,10 @@ where
             }
         }
         if !cache_miss_range.is_empty() {
+            debug!(
+                "Fetching cache miss range: {:?}, offset: {}, size: {}",
+                cache_miss_range, offset, size
+            );
             let pages = self.inner.read_vec(&cache_miss_range).await?;
             for (i, page) in cache_miss_idx.into_iter().zip(pages.into_iter()) {
                 let page = Arc::new(page);

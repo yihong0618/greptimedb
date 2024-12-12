@@ -16,6 +16,7 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use bytes::Bytes;
+use common_telemetry::{debug, tracing};
 use object_store::ObjectStore;
 use parquet::basic::ColumnOrder;
 use parquet::file::metadata::{FileMetaData, ParquetMetaData, RowGroupMetaData};
@@ -95,11 +96,18 @@ const MERGE_GAP: usize = 512 * 1024;
 ///
 /// * `FETCH_PARALLELISM` - The number of concurrent fetch operations.
 /// * `MERGE_GAP` - The maximum gap size (in bytes) to merge small byte ranges for optimized fetching.
+#[tracing::instrument(level = tracing::Level::DEBUG, skip_all)]
 pub async fn fetch_byte_ranges(
     file_path: &str,
     object_store: ObjectStore,
     ranges: &[Range<u64>],
 ) -> object_store::Result<Vec<Bytes>> {
+    debug!(
+        "fetch_byte_ranges: {:?}, file_path: {}, scheme: {:?}",
+        ranges,
+        file_path,
+        object_store.info().scheme(),
+    );
     Ok(object_store
         .reader_with(file_path)
         .concurrent(FETCH_PARALLELISM)
