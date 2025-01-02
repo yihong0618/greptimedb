@@ -86,3 +86,21 @@ RUN chmod +x /usr/local/bin/pull_binstall.sh && /usr/local/bin/pull_binstall.sh
 
 # Install nextest.
 RUN cargo binstall cargo-nextest --no-confirm
+
+# ARG to control whether to download greptimedb dependencies for offline build.
+ARG DOWNLOAD_DEPENDENCIES=false
+
+# ARG to control whether to keep greptimedb commit for offline build.
+ARG GREPTIMEDB_COMMIT
+
+# Download greptimedb dependencies for offline build.
+RUN if [ "${DOWNLOAD_DEPENDENCIES}" = "true" ]; then \
+        git clone https://github.com/GreptimeTeam/greptimedb.git && \
+        cd greptimedb && \
+        if [ -n "${GREPTIMEDB_COMMIT}" ]; then \
+            git reset --hard ${GREPTIMEDB_COMMIT}; \
+        fi && \
+        cargo fetch --locked && \
+        cd .. && \
+        rm -rf greptimedb; \
+    fi

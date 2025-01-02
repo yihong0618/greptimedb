@@ -9,6 +9,8 @@ IMAGE_REGISTRY ?= docker.io
 IMAGE_NAMESPACE ?= greptime
 IMAGE_TAG ?= latest
 DEV_BUILDER_IMAGE_TAG ?= 2024-10-19-a5c00e85-20241024184445
+DOWNLOAD_DEPENDENCIES_IN_DEV_BUILDER ?= false
+GREPTIMEDB_COMMIT_FOR_DOWNLOADING_DEPENDENCIES ?=
 BUILDX_MULTI_PLATFORM_BUILD ?= false
 BUILDX_BUILDER_NAME ?= gtbuilder
 BASE_IMAGE ?= ubuntu
@@ -56,6 +58,10 @@ ifneq ($(strip $(RELEASE)),)
 	CARGO_BUILD_OPTS += --release
 endif
 
+ifneq ($(strip $(OFFLINE)),)
+	CARGO_BUILD_OPTS += --offline
+endif
+
 ifeq ($(BUILDX_MULTI_PLATFORM_BUILD), all)
 	BUILDX_MULTI_PLATFORM_BUILD_OPTS := --platform linux/amd64,linux/arm64 --push
 else ifeq ($(BUILDX_MULTI_PLATFORM_BUILD), amd64)
@@ -77,7 +83,7 @@ build: ## Build debug version greptime.
 .PHONY: build-by-dev-builder
 build-by-dev-builder: ## Build greptime by dev-builder.
 	docker run --network=host \
-	-v ${PWD}:/greptimedb -v ${CARGO_REGISTRY_CACHE}:/root/.cargo/registry \
+	-v ${PWD}:/greptimedb $(if $(strip $(OFFLINE)),,-v ${CARGO_REGISTRY_CACHE}:/root/.cargo/registry) \
 	-w /greptimedb ${IMAGE_REGISTRY}/${IMAGE_NAMESPACE}/dev-builder-${BASE_IMAGE}:${DEV_BUILDER_IMAGE_TAG} \
 	make build \
 	CARGO_EXTENSION="${CARGO_EXTENSION}" \
@@ -86,6 +92,7 @@ build-by-dev-builder: ## Build greptime by dev-builder.
 	TARGET_DIR=${TARGET_DIR} \
 	TARGET=${TARGET} \
 	RELEASE=${RELEASE} \
+	OFFLINE=${OFFLINE} \
 	CARGO_BUILD_EXTRA_OPTS="${CARGO_BUILD_EXTRA_OPTS}"
 
 .PHONY: build-android-bin
@@ -145,6 +152,8 @@ docker-image-buildx: multi-platform-buildx ## Build docker image by buildx.
 dev-builder: multi-platform-buildx ## Build dev-builder image.
 	docker buildx build --builder ${BUILDX_BUILDER_NAME} \
 	--build-arg="RUST_TOOLCHAIN=${RUST_TOOLCHAIN}" \
+	--build-arg="DOWNLOAD_DEPENDENCIES=${DOWNLOAD_DEPENDENCIES_IN_DEV_BUILDER}" \
+	--build-arg="GREPTIMEDB_COMMIT=${GREPTIMEDB_COMMIT_FOR_DOWNLOADING_DEPENDENCIES}" \
 	-f docker/dev-builder/${BASE_IMAGE}/Dockerfile \
 	-t ${IMAGE_REGISTRY}/${IMAGE_NAMESPACE}/dev-builder-${BASE_IMAGE}:${DEV_BUILDER_IMAGE_TAG} ${BUILDX_MULTI_PLATFORM_BUILD_OPTS} .
 

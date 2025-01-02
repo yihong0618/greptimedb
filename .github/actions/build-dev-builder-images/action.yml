@@ -31,6 +31,14 @@ inputs:
     description: Build dev-builder-android image
     required: false
     default: "true"
+  download-dependencies-in-dev-builder:
+    description: Download greptimedb dependencies in dev-builder
+    required: false
+    default: "false"
+  greptimedb-commit-for-downloading-dependencies:
+    description: GreptimeDB commit for downloading dependencies
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -48,6 +56,8 @@ runs:
         make dev-builder \
           BASE_IMAGE=ubuntu \
           BUILDX_MULTI_PLATFORM_BUILD=all \
+          DOWNLOAD_DEPENDENCIES_IN_DEV_BUILDER=${{ inputs.download-dependencies-in-dev-builder }} \
+          GREPTIMEDB_COMMIT_FOR_DOWNLOADING_DEPENDENCIES=${{ inputs.greptimedb-commit-for-downloading-dependencies }} \
           IMAGE_REGISTRY=${{ inputs.dockerhub-image-registry }} \
           IMAGE_NAMESPACE=${{ inputs.dockerhub-image-namespace }} \
           DEV_BUILDER_IMAGE_TAG=${{ inputs.version }}
