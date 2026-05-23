@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["configure_cache_registry","setup_frontend_dynamic_plugins","setup_frontend_plugins","start_frontend_plugins"],"mod":["context"]};
